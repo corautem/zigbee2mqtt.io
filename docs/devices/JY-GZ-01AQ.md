@@ -1,6 +1,6 @@
 ---
-title: "Xiaomi JY-GZ-01AQ control via MQTT"
-description: "Integrate your Xiaomi JY-GZ-01AQ via Zigbee2MQTT with whatever smart home infrastructure you are using without the vendor's bridge or gateway."
+title: "Aqara JY-GZ-01AQ control via MQTT"
+description: "Integrate your Aqara JY-GZ-01AQ via Zigbee2MQTT with whatever smart home infrastructure you are using without the vendor's bridge or gateway."
 addedAt: 2022-04-30T08:00:58
 pageClass: device-page
 ---
@@ -11,19 +11,47 @@ pageClass: device-page
 <!-- Do not use h1 or h2 heading within "## Notes"-Section. -->
 <!-- !!!! -->
 
-# Xiaomi JY-GZ-01AQ
+# Aqara JY-GZ-01AQ
 
 |     |     |
 |-----|-----|
 | Model | JY-GZ-01AQ  |
-| Vendor  | Xiaomi  |
-| Description | Aqara smart smoke detector |
-| Exposes | smoke, smoke_density, smoke_density_dbm, selftest, test, buzzer, buzzer_manual_alarm, buzzer_manual_mute, heartbeat_indicator, linkage_alarm, linkage_alarm_state, battery, voltage, power_outage_count, linkquality |
-| Picture | ![Xiaomi JY-GZ-01AQ](https://www.zigbee2mqtt.io/images/devices/JY-GZ-01AQ.jpg) |
+| Vendor  | [Aqara](/supported-devices/#v=Aqara)  |
+| Description | Smart smoke detector |
+| Exposes | smoke, smoke_density, smoke_density_dbm, selftest, test, buzzer, buzzer_manual_alarm, buzzer_manual_mute, heartbeat_indicator, linkage_alarm, linkage_alarm_state, battery, voltage, power_outage_count |
+| Picture | ![Aqara JY-GZ-01AQ](https://www.zigbee2mqtt.io/images/devices/JY-GZ-01AQ.png) |
+| White-label | Aqara JY-GZ-03AQ |
 
 
 <!-- Notes BEGIN: You can edit here. Add "## Notes" headline if not already present. -->
 ## Notes
+
+### 🚨 Version issue v21 🚨
+There is currently an issue with the version v21 for this device. In this version, when the device goes off (because of real smoke), the device only buzzers ONE time and then mutes itself (which you can manually unmute again). This version has been pulled back from the OTA repository (so you can't update currently the device with Z2M) and if you have this version installed, make sure that you test your device. **You can't downgrade, as the device blocks any downgrades**. If you installed this version and have this issue, then you got currently bad luck.
+
+#### Workaround
+To make sure, that you get alarmed, when smoke gets detected, you can create an automation in Homeassistant which manually unmutes the device when it goes off. **Note: This workaround REQUIRES that Z2M and Homeassistant are up and working!** Currently, there is no offline workaround.
+
+[Link to the GitHub issue](https://github.com/Koenkk/zigbee-OTA/issues/938)
+
+### Partially unsupported adapter
+The adapter ConBee III (until FW v26550900, as of 09. Dec 2025) has an issue, where the states of the device doesn't get automatically updated (for example when the alarm goes off). This means, you need to manually refresh the data (polling) with the reload-buttons inside the device-page in Z2M.
+
+#### Workaround
+You can also create for that a manual MQTT request (for example in Homeassistant, which repeats the request all 5 seconds) to manually fetch the newest states. For example, you can make a request to the topic `zigbee2mqtt/{DEVICE ID}/get` with the payload `{"smoke":""}` and then the alarm state of the device gets reloaded in Z2M. To update all states, use the following payload:
+```
+{
+  "smoke": "",
+  "smoke_density": "",
+  "smoke_density_dbm": "",
+  "linkage_alarm": "",
+  "buzzer_manual_alarm": "",
+  "buzzer_manual_mute": "",
+  "heartbeat_indicator": ""
+}
+```
+
+[Link to the GitHub issue (for more information)](https://github.com/Koenkk/zigbee2mqtt/issues/29880)
 
 ### Adapter firmware
 In order for this device to work, at least the following firmware is required on your adapter:
@@ -31,6 +59,7 @@ In order for this device to work, at least the following firmware is required on
 - CC1352/CC2652: [`20211114`](https://github.com/Koenkk/Z-Stack-firmware/tree/7c5a6da0c41855d42b5e6506e5e3b496be097ba3/coordinator/Z-Stack_3.x.0/bin)
 - CC2538: [`20211222`](https://github.com/jethome-ru/zigbee-firmware/tree/master/ti/coordinator/cc2538_cc2592)
 - Conbee II: [`0x26720700`]( http://deconz.dresden-elektronik.de/deconz-firmware/deCONZ_ConBeeII_0x26720700.bin.GCF)
+- ConBee III: Not recommended.
 
 *Note that if you have already paired the device you will need to repair it after upgrading your adapter firmware.*
 
@@ -42,6 +71,7 @@ After this the device will automatically join.
 
 *Note: When you fail to pair a device, try replacing the battery, this could solve the problem.*
 <!-- Notes END: Do not edit below this line -->
+
 
 ## OTA updates
 This device supports OTA updates, for more information see [OTA updates](../guide/usage/ota_updates.md).
@@ -57,13 +87,13 @@ To read (`/get`) the value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME
 It's not possible to write (`/set`) this value.
 If value equals `true` smoke is ON, if `false` OFF.
 
-### Smoke_density (numeric)
+### Smoke density (numeric)
 Value of smoke concentration.
 Value can be found in the published state on the `smoke_density` property.
 To read (`/get`) the value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/get` with payload `{"smoke_density": ""}`.
 It's not possible to write (`/set`) this value.
 
-### Smoke_density_dbm (numeric)
+### Smoke density dbm (numeric)
 Value of smoke concentration in dB/m.
 Value can be found in the published state on the `smoke_density_dbm` property.
 To read (`/get`) the value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/get` with payload `{"smoke_density_dbm": ""}`.
@@ -75,7 +105,7 @@ Starts the self-test process (checking the indicator light and buzzer work prope
 Value will **not** be published in the state.
 It's not possible to read (`/get`) this value.
 To write (`/set`) a value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/set` with payload `{"selftest": NEW_VALUE}`.
-The possible values are: ``.
+The possible values are: `selftest`.
 
 ### Test (binary)
 Self-test in progress.
@@ -84,48 +114,48 @@ It's not possible to read (`/get`) or write (`/set`) this value.
 If value equals `true` test is ON, if `false` OFF.
 
 ### Buzzer (enum)
-The buzzer can be muted and alarmed manually. During a smoke alarm, the buzzer can be manually muted for 80 seconds ("mute") and unmuted ("alarm"). The buzzer cannot be pre-muted, as this function only works during a smoke alarm. During the absence of a smoke alarm, the buzzer can be manually alarmed ("alarm") and disalarmed ("mute").
+The buzzer can be muted and alarmed manually. During a smoke alarm, the buzzer can be manually muted for 80 seconds ("mute") and unmuted ("alarm"). The buzzer cannot be pre-muted, as this function only works during a smoke alarm. During the absence of a smoke alarm, the buzzer can be manually alarmed ("alarm") and disalarmed ("mute"), but for this "linkage_alarm" option must be enabled.
 Value will **not** be published in the state.
 It's not possible to read (`/get`) this value.
 To write (`/set`) a value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/set` with payload `{"buzzer": NEW_VALUE}`.
 The possible values are: `mute`, `alarm`.
 
-### Buzzer_manual_alarm (binary)
+### Buzzer manual alarm (binary)
 Buzzer alarmed (manually).
 Value can be found in the published state on the `buzzer_manual_alarm` property.
 To read (`/get`) the value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/get` with payload `{"buzzer_manual_alarm": ""}`.
 It's not possible to write (`/set`) this value.
-If value equals `true` buzzer_manual_alarm is ON, if `false` OFF.
+If value equals `true` buzzer manual alarm is ON, if `false` OFF.
 
-### Buzzer_manual_mute (binary)
+### Buzzer manual mute (binary)
 Buzzer muted (manually).
 Value can be found in the published state on the `buzzer_manual_mute` property.
 To read (`/get`) the value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/get` with payload `{"buzzer_manual_mute": ""}`.
 It's not possible to write (`/set`) this value.
-If value equals `true` buzzer_manual_mute is ON, if `false` OFF.
+If value equals `true` buzzer manual mute is ON, if `false` OFF.
 
-### Heartbeat_indicator (binary)
+### Heartbeat indicator (binary)
 When this option is enabled then in the normal monitoring state, the green indicator light flashes every 60 seconds.
 Value can be found in the published state on the `heartbeat_indicator` property.
 To read (`/get`) the value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/get` with payload `{"heartbeat_indicator": ""}`.
 To write (`/set`) a value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/set` with payload `{"heartbeat_indicator": NEW_VALUE}`.
-If value equals `true` heartbeat_indicator is ON, if `false` OFF.
+If value equals `true` heartbeat indicator is ON, if `false` OFF.
 
-### Linkage_alarm (binary)
+### Linkage alarm (binary)
 When this option is enabled and a smoke alarm has occurred, then "linkage_alarm_state"=true, and when the smoke alarm has ended or the buzzer has been manually muted, then "linkage_alarm_state"=false.
 Value can be found in the published state on the `linkage_alarm` property.
 To read (`/get`) the value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/get` with payload `{"linkage_alarm": ""}`.
 To write (`/set`) a value publish a message to topic `zigbee2mqtt/FRIENDLY_NAME/set` with payload `{"linkage_alarm": NEW_VALUE}`.
-If value equals `true` linkage_alarm is ON, if `false` OFF.
+If value equals `true` linkage alarm is ON, if `false` OFF.
 
-### Linkage_alarm_state (binary)
+### Linkage alarm state (binary)
 "linkage_alarm" is triggered.
 Value can be found in the published state on the `linkage_alarm_state` property.
 It's not possible to read (`/get`) or write (`/set`) this value.
-If value equals `true` linkage_alarm_state is ON, if `false` OFF.
+If value equals `true` linkage alarm state is ON, if `false` OFF.
 
 ### Battery (numeric)
-Remaining battery in %.
+Remaining battery in %, can take up to 24 hours before reported.
 Value can be found in the published state on the `battery` property.
 It's not possible to read (`/get`) or write (`/set`) this value.
 The minimal value is `0` and the maximum value is `100`.
@@ -137,15 +167,8 @@ Value can be found in the published state on the `voltage` property.
 It's not possible to read (`/get`) or write (`/set`) this value.
 The unit of this value is `mV`.
 
-### Power_outage_count (numeric)
+### Power outage count (numeric)
 Number of power outages.
 Value can be found in the published state on the `power_outage_count` property.
 It's not possible to read (`/get`) or write (`/set`) this value.
-
-### Linkquality (numeric)
-Link quality (signal strength).
-Value can be found in the published state on the `linkquality` property.
-It's not possible to read (`/get`) or write (`/set`) this value.
-The minimal value is `0` and the maximum value is `255`.
-The unit of this value is `lqi`.
 

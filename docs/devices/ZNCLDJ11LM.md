@@ -1,6 +1,6 @@
 ---
-title: "Xiaomi ZNCLDJ11LM control via MQTT"
-description: "Integrate your Xiaomi ZNCLDJ11LM via Zigbee2MQTT with whatever smart home infrastructure you are using without the vendor's bridge or gateway."
+title: "Aqara ZNCLDJ11LM control via MQTT"
+description: "Integrate your Aqara ZNCLDJ11LM via Zigbee2MQTT with whatever smart home infrastructure you are using without the vendor's bridge or gateway."
 addedAt: 2019-07-22T20:08:17Z
 pageClass: device-page
 ---
@@ -11,15 +11,15 @@ pageClass: device-page
 <!-- Do not use h1 or h2 heading within "## Notes"-Section. -->
 <!-- !!!! -->
 
-# Xiaomi ZNCLDJ11LM
+# Aqara ZNCLDJ11LM
 
 |     |     |
 |-----|-----|
 | Model | ZNCLDJ11LM  |
-| Vendor  | Xiaomi  |
-| Description | Aqara curtain motor |
-| Exposes | cover (state, position), running, motor_state, linkquality |
-| Picture | ![Xiaomi ZNCLDJ11LM](https://www.zigbee2mqtt.io/images/devices/ZNCLDJ11LM.jpg) |
+| Vendor  | [Aqara](/supported-devices/#v=Aqara)  |
+| Description | Curtain controller |
+| Exposes | cover (state, position), running, motor_state |
+| Picture | ![Aqara ZNCLDJ11LM](https://www.zigbee2mqtt.io/images/devices/ZNCLDJ11LM.png) |
 
 
 <!-- Notes BEGIN: You can edit here. Add "## Notes" headline if not already present. -->
@@ -60,26 +60,40 @@ If motor is used without battery it may lose configuration after long power outa
 
 Home Assistant automation example:
 ```yaml
-- alias: Calibrate curtain
-  trigger:
-  - platform: homeassistant
-    event: start
-  action:
-  - service: mqtt.publish
-    data:
-      topic: zigbee2mqtt/<FRIENDLY_NAME>/set
-      payload: "{ \"options\": { \"reset_limits\": true } }"
-      # note "" are escaped with \ else will not work if you want to send payload as json
-  - service: cover.close_cover
-    entity_id: cover.<COVER_ID>
-  - delay:
-      seconds: 13 #wait for closure complete
-  - service: cover.open_cover
-    entity_id: cover.<COVER_ID>
+- id: "<Automation_ID>"
+  alias: Calibrate curtain
+  description: "Calibrate curtain"
+  triggers:
+    - trigger: homeassistant
+      event: start
+  conditions: []
+  actions:
+    - action: mqtt.publish
+      metadata: {}
+      data:
+        topic: zigbee2mqtt/<FRIENDLY_NAME>/set
+        payload: >-
+          {{ {'options': {'reset_limits': true}} | tojson }}
+    - action: cover.close_cover
+      metadata: {}
+      data: {}
+      target:
+        device_id: <COVER_ID>
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 13
+        milliseconds: 0
+    - action: cover.open_cover
+      metadata: {}
+      data: {}
+      target:
+        device_id: <COVER_ID>
 ```
 
 Motor leaves calibration mode automatically after it reaches the both open and close curtain position limits. Calibration is mandatory for proper position reporting and ability to set intermediate positions.
 <!-- Notes END: Do not edit below this line -->
+
 
 ## OTA updates
 This device supports OTA updates, for more information see [OTA updates](../guide/usage/ota_updates.md).
@@ -105,16 +119,9 @@ Value can be found in the published state on the `running` property.
 It's not possible to read (`/get`) or write (`/set`) this value.
 If value equals `true` running is ON, if `false` OFF.
 
-### Motor_state (enum)
+### Motor state (enum)
 Motor state.
 Value can be found in the published state on the `motor_state` property.
 It's not possible to read (`/get`) or write (`/set`) this value.
 The possible values are: `stopped`, `opening`, `closing`.
-
-### Linkquality (numeric)
-Link quality (signal strength).
-Value can be found in the published state on the `linkquality` property.
-It's not possible to read (`/get`) or write (`/set`) this value.
-The minimal value is `0` and the maximum value is `255`.
-The unit of this value is `lqi`.
 
